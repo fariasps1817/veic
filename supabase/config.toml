@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.get-public-shop-brand]
 verify_jwt = false
+
+[functions.delete-atpv-request]
+verify_jwt = false

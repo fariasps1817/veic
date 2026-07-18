@@ -10,6 +10,7 @@ import {
   RotateCw,
   Send,
   Share2,
+  Trash2,
   XCircle,
 } from 'lucide-react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
@@ -20,10 +21,12 @@ import {
   approveRequest,
   buildPublicLink,
   cancelRequest,
+  deleteRequest,
   listRequests,
   renewRequestLink,
 } from '../lib/data'
 import { downloadBlob, generateAtpvPdf, pdfFileName, printPdf, sharePdf } from '../lib/pdf'
+import { canDeleteRequest } from '../lib/requestRules'
 import { formatCurrency } from '../lib/validation'
 import type { AtpvRequest } from '../types'
 
@@ -139,6 +142,19 @@ export function RequestDetail() {
     }
   }
 
+  const handleDelete = async () => {
+    if (!request || !window.confirm(`Excluir definitivamente a solicitação ${request.codigo}? Esta ação não pode ser desfeita.`)) return
+    setBusy('delete')
+    setError('')
+    try {
+      await deleteRequest(request.id)
+      navigate('/', { replace: true })
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Não foi possível excluir a solicitação.')
+      setBusy('')
+    }
+  }
+
   if (loading) return <Loading label="Carregando solicitação…" />
   if (!request) {
     return <div className="page"><Notice kind="error">{error || 'Solicitação não encontrada.'}</Notice></div>
@@ -246,6 +262,14 @@ export function RequestDetail() {
         <button className="danger-link" onClick={() => void handleCancel()} disabled={busy === 'cancel'}>
           <XCircle aria-hidden="true" /> Cancelar solicitação
         </button>
+      ) : null}
+
+      {canDeleteRequest(request.status) ? (
+        <div className="delete-request-action">
+          <button className="danger-link danger-link--muted" onClick={() => void handleDelete()} disabled={busy === 'delete'}>
+            <Trash2 aria-hidden="true" /> {busy === 'delete' ? 'Excluindo…' : 'Excluir solicitação'}
+          </button>
+        </div>
       ) : null}
     </div>
   )

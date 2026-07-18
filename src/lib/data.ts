@@ -1,4 +1,5 @@
 import type { AtpvRequest, BuyerData, PublicRequestView, RequestStatus, ShopBrand, ShopSettings, ShopUser, ShopUserRole } from '../types'
+import { canDeleteRequest } from './requestRules'
 import { isDemoMode, supabase } from './supabase'
 
 const REQUESTS_KEY = 'atpv-facil:solicitacoes:v1'
@@ -309,6 +310,24 @@ export async function cancelRequest(id: string): Promise<void> {
   })
   if (error) throw new Error('Não foi possível cancelar a solicitação.')
   if (!data?.ok) throw new Error(data?.error ?? 'Não foi possível cancelar a solicitação.')
+}
+
+export async function deleteRequest(id: string): Promise<void> {
+  if (isDemoMode || !supabase) {
+    const requests = readLocalRequests()
+    const request = requests.find((item) => item.id === id)
+    if (!request || !canDeleteRequest(request.status)) {
+      throw new Error('Somente solicitações aprovadas ou canceladas podem ser excluídas.')
+    }
+    writeLocalRequests(requests.filter((item) => item.id !== id))
+    return
+  }
+
+  const { data, error } = await supabase.functions.invoke('delete-atpv-request', {
+    body: { id },
+  })
+  if (error) throw new Error('Não foi possível excluir a solicitação.')
+  if (!data?.ok) throw new Error(data?.error ?? 'Não foi possível excluir a solicitação.')
 }
 
 export function buildPublicLink(request: AtpvRequest): string {
