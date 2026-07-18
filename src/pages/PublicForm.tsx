@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import {
   ArrowLeft,
   ArrowRight,
@@ -210,6 +210,15 @@ export function PublicForm() {
     }
   }
 
+  const handleFormSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (step < 3) {
+      goNext()
+      return
+    }
+    void handleSubmit()
+  }
+
   const progress = useMemo(() => `${Math.round((step / 3) * 100)}%`, [step])
 
   if (loading) return <div className="public-result-page"><div className="public-center"><Loading label="Abrindo formulário seguro…" /></div><AppFooter /></div>
@@ -271,7 +280,7 @@ export function PublicForm() {
         <div className="progress-track"><span style={{ width: progress }} /></div>
       </section>
 
-      <section className="public-form-card">
+      <form className="public-form-card" onSubmit={handleFormSubmit} noValidate>
         {loadError ? <Notice kind="error">{loadError}</Notice> : null}
         {step === 1 ? (
           <div className="form-step">
@@ -285,18 +294,22 @@ export function PublicForm() {
                     <button type="button" className={documentType === 'cnpj' ? 'active' : ''} onClick={() => selectDocumentType('cnpj')} aria-pressed={documentType === 'cnpj'}>CNPJ</button>
                   </div>
                 <input
+                  key={documentType}
+                  name="cpfCnpj"
                   aria-labelledby="document-label"
                   aria-invalid={Boolean(errors.cpfCnpj)}
                   value={form.cpfCnpj}
                   onChange={(event) => update('cpfCnpj', documentType === 'cpf' ? maskCpf(event.target.value) : maskCnpj(event.target.value))}
-                  type={documentType === 'cpf' ? 'tel' : 'text'}
+                  type="text"
                   inputMode={documentType === 'cpf' ? 'numeric' : 'text'}
-                  autoCapitalize="characters"
+                  pattern={documentType === 'cpf' ? '[0-9]*' : undefined}
+                  enterKeyHint="next"
+                  autoComplete="off"
+                  autoCapitalize={documentType === 'cpf' ? 'off' : 'characters'}
                   autoCorrect="off"
                   spellCheck={false}
                   placeholder={documentType === 'cpf' ? '000.000.000-00' : '00.000.000/0000-00'}
                   required
-                  autoFocus
                 />
                 </div>
                 {errors.cpfCnpj ? <span className="field__error">{errors.cpfCnpj}</span> : null}
@@ -323,15 +336,19 @@ export function PublicForm() {
                   maxLength={160}
                 />
               </Field>
-              <Field label="WhatsApp com DDD(" error={errors.whatsapp} required>
+              <Field label="WhatsApp com DDD" error={errors.whatsapp} required>
                 <input
+                  name="whatsapp"
                   value={form.whatsapp}
                   onChange={(event) => update('whatsapp', maskPhone(event.target.value))}
-                  type="tel"
+                  type="text"
                   inputMode="numeric"
+                  pattern="[0-9]*"
+                  enterKeyHint="next"
+                  autoCapitalize="off"
                   autoCorrect="off"
                   spellCheck={false}
-                  autoComplete="tel"
+                  autoComplete="tel-national"
                   placeholder="(85) 99999-9999"
                 />
               </Field>
@@ -346,16 +363,19 @@ export function PublicForm() {
               <Field label="CEP" error={errors.cep} required>
                 <div className="input-action">
                   <input
+                    name="cep"
                     value={form.cep}
                     onChange={(event) => { update('cep', maskCep(event.target.value)); setCepNotice(null) }}
                     onBlur={() => { if (form.cep.replace(/\D/g, '').length === 8 && !cepNotice) void lookupCep() }}
-                    type="tel"
+                    type="text"
                     inputMode="numeric"
+                    pattern="[0-9]*"
+                    enterKeyHint="next"
+                    autoCapitalize="off"
                     autoCorrect="off"
                     spellCheck={false}
-                    autoComplete="postal-code"
+                    autoComplete="off"
                     placeholder="00000-000"
-                    autoFocus
                   />
                   <button type="button" onClick={() => void lookupCep()} disabled={cepLoading} aria-label="Consultar CEP">
                     {cepLoading ? <LoaderCircle className="spin" aria-hidden="true" /> : <Search aria-hidden="true" />}
@@ -368,7 +388,20 @@ export function PublicForm() {
                   <input value={form.logradouro} onChange={(event) => update('logradouro', event.target.value.slice(0, 120))} onBlur={() => update('logradouro', titleCasePtBr(form.logradouro))} autoComplete="address-line1" maxLength={120} />
                 </Field>
                 <Field label="Número" error={errors.numero} required>
-                  <input value={form.numero} onChange={(event) => update('numero', onlyDigits(event.target.value).slice(0, 10))} inputMode="numeric" placeholder="Somente números" maxLength={10} />
+                  <input
+                    name="numero"
+                    value={form.numero}
+                    onChange={(event) => update('numero', onlyDigits(event.target.value).slice(0, 10))}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    enterKeyHint="next"
+                    autoCapitalize="off"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    placeholder="Somente números"
+                    maxLength={10}
+                  />
                 </Field>
                 <Field label="Bairro" error={errors.bairro} required>
                   <input value={form.bairro} onChange={(event) => update('bairro', event.target.value.slice(0, 80))} onBlur={() => update('bairro', titleCasePtBr(form.bairro))} maxLength={80} />
@@ -420,10 +453,10 @@ export function PublicForm() {
 
         <div className="public-actions">
           {step > 1 ? <button className="button button--secondary" type="button" onClick={goBack}><ArrowLeft aria-hidden="true" /> Voltar</button> : <span />}
-          {step < 3 ? <button className="button button--primary" type="button" onClick={goNext}>Continuar <ArrowRight aria-hidden="true" /></button> : null}
-          {step === 3 ? <button className="button button--primary" type="button" onClick={() => void handleSubmit()} disabled={sending}>{sending ? <><LoaderCircle className="spin" /> Enviando…</> : <><Check aria-hidden="true" /> Confirmar e enviar</>}</button> : null}
+          {step < 3 ? <button className="button button--primary" type="submit">Continuar <ArrowRight aria-hidden="true" /></button> : null}
+          {step === 3 ? <button className="button button--primary" type="submit" disabled={sending}>{sending ? <><LoaderCircle className="spin" /> Enviando…</> : <><Check aria-hidden="true" /> Confirmar e enviar</>}</button> : null}
         </div>
-      </section>
+      </form>
 
       <footer className="public-footer">
         <ShieldCheck aria-hidden="true" /> Seus dados são usados somente para preparar o formulário solicitado.
