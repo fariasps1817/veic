@@ -4,6 +4,7 @@ import { NavLink, Outlet, useOutletContext } from 'react-router-dom'
 import { getShopSettings } from '../lib/data'
 import { isDemoMode, signOut } from '../lib/supabase'
 import type { ShopSettings } from '../types'
+import { AppFooter } from './AppFooter'
 import { Loading } from './ui'
 
 interface AdminContextValue {
@@ -17,11 +18,10 @@ function Brand({ shop }: { shop: ShopSettings }) {
       {shop.logoDataUrl ? (
         <img src={shop.logoDataUrl} alt="" className="brand__logo" />
       ) : (
-        <span className="brand__mark" aria-hidden="true">A</span>
+        <span className="brand__mark" aria-hidden="true">{shop.nomeFantasia.trim().charAt(0).toUpperCase() || 'L'}</span>
       )}
       <span>
-        <strong>ATPV Fácil</strong>
-        <small>{shop.nomeFantasia}</small>
+        <strong>{shop.nomeFantasia}</strong>
       </span>
     </div>
   )
@@ -35,6 +35,10 @@ export function AdminLayout() {
   useEffect(() => {
     void refreshShop()
   }, [])
+
+  useEffect(() => {
+    if (shop?.nomeFantasia) document.title = shop.nomeFantasia
+  }, [shop?.nomeFantasia])
 
   if (!shop) return <Loading label="Preparando o painel…" />
 
@@ -59,12 +63,15 @@ export function AdminLayout() {
       </aside>
 
       <main className="admin-main">
-        {isDemoMode ? (
-          <div className="demo-banner">
-            Os dados desta demonstração ficam somente neste navegador. O Supabase será conectado antes da publicação.
-          </div>
-        ) : null}
-        <Outlet context={{ shop, refreshShop } satisfies AdminContextValue} />
+        <div className="admin-main__content">
+          {isDemoMode ? (
+            <div className="demo-banner">
+              Os dados desta demonstração ficam somente neste navegador. O Supabase será conectado antes da publicação.
+            </div>
+          ) : null}
+          <Outlet context={{ shop, refreshShop } satisfies AdminContextValue} />
+        </div>
+        <AppFooter />
       </main>
 
       <nav className="bottom-nav" aria-label="Navegação principal no celular">

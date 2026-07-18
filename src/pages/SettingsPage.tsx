@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react'
 import { Building2, ImagePlus, Save, Trash2 } from 'lucide-react'
 import { useAdminContext } from '../components/AdminLayout'
+import { PasswordSettings, UserManagement } from '../components/AccountSettings'
 import { Field, Notice, PageHeader } from '../components/ui'
 import { saveShopSettings } from '../lib/data'
 import { maskCpfCnpj, maskPhone, validateCnpj } from '../lib/validation'
@@ -61,8 +62,8 @@ export function SettingsPage() {
     <div className="page">
       <PageHeader
         eyebrow="Área administrativa"
-        title="Dados da loja"
-        description="Essas informações identificam o formulário enviado ao comprador e o PDF auxiliar."
+        title="Configurações"
+        description="Gerencie os dados da loja, os usuários e a segurança do seu acesso."
       />
       {message ? <Notice kind="success">{message}</Notice> : null}
       {error ? <Notice kind="error">{error}</Notice> : null}
@@ -117,6 +118,11 @@ export function SettingsPage() {
           </div>
         </section>
       </form>
+
+      <div className="account-settings-grid">
+        <UserManagement />
+        <PasswordSettings />
+      </div>
     </div>
   )
 }

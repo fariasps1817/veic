@@ -65,21 +65,31 @@ export function validateCpfOrCnpj(value: string): boolean {
   return document.length === 11 ? validateCpf(document) : validateCnpj(document)
 }
 
-export function maskCpfCnpj(value: string): string {
-  const raw = documentCharacters(value)
-  const isCnpj = /[A-Z]/.test(raw) || raw.length > 11
-  if (!isCnpj) {
-    return raw
-      .replace(/^(\d{3})(\d)/, '$1.$2')
-      .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
-      .replace(/\.(\d{3})(\d)/, '.$1-$2')
-  }
+export function maskCpf(value: string): string {
+  return onlyDigits(value)
+    .slice(0, 11)
+    .replace(/^(\d{3})(\d)/, '$1.$2')
+    .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
+    .replace(/\.(\d{3})(\d)/, '.$1-$2')
+}
+
+export function maskCnpj(value: string): string {
+  const characters = value.toUpperCase().replace(/[^A-Z0-9]/g, '')
+  const base = characters.slice(0, 12)
+  const checkDigits = characters.slice(12).replace(/\D/g, '').slice(0, 2)
+  const raw = `${base}${checkDigits}`
 
   return raw
     .replace(/^([A-Z0-9]{2})([A-Z0-9])/, '$1.$2')
     .replace(/^([A-Z0-9]{2})\.([A-Z0-9]{3})([A-Z0-9])/, '$1.$2.$3')
     .replace(/\.([A-Z0-9]{3})([A-Z0-9])/, '.$1/$2')
     .replace(/([A-Z0-9]{4})(\d)/, '$1-$2')
+}
+
+export function maskCpfCnpj(value: string): string {
+  const raw = value.toUpperCase().replace(/[^A-Z0-9]/g, '')
+  const isCnpj = /[A-Z]/.test(raw) || raw.length > 11
+  return isCnpj ? maskCnpj(raw) : maskCpf(raw)
 }
 
 export function maskCep(value: string): string {

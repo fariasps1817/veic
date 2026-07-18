@@ -153,7 +153,7 @@ export function RequestDetail() {
       <PageHeader
         eyebrow={request.codigo}
         title={request.buyer?.nomeCompleto ?? 'Solicitação aguardando preenchimento'}
-        description={`Criada em ${formatDateTime(request.createdAt)} · Horário de Fortaleza`}
+        description={`Criada em ${formatDateTime(request.createdAt)}`}
         actions={<StatusBadge status={request.status} />}
       />
 

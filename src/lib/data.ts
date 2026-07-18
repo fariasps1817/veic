@@ -1,8 +1,9 @@
-import type { AtpvRequest, BuyerData, PublicRequestView, RequestStatus, ShopSettings } from '../types'
+import type { AtpvRequest, BuyerData, PublicRequestView, RequestStatus, ShopSettings, ShopUser, ShopUserRole } from '../types'
 import { isDemoMode, supabase } from './supabase'
 
 const REQUESTS_KEY = 'atpv-facil:solicitacoes:v1'
 const SHOP_KEY = 'atpv-facil:loja:v1'
+const USERS_KEY = 'atpv-facil:usuarios:v1'
 
 const defaultShop: ShopSettings = {
   id: 'demo-shop',
@@ -91,6 +92,57 @@ export async function saveShopSettings(settings: ShopSettings): Promise<void> {
     logo_data_url: settings.logoDataUrl ?? null,
   }).eq('id', settings.id)
   if (error) throw new Error('Não foi possível salvar os dados da loja.')
+}
+
+export async function getCurrentShopRole(): Promise<ShopUserRole> {
+  if (isDemoMode || !supabase) return 'administrador'
+  const { data, error } = await supabase.from('shop_members').select('role').limit(1).single()
+  if (error || !data) throw new Error('Não foi possível identificar seu perfil de acesso.')
+  return data.role as ShopUserRole
+}
+
+export async function listShopUsers(): Promise<ShopUser[]> {
+  if (isDemoMode || !supabase) {
+    const stored = window.localStorage.getItem(USERS_KEY)
+    return stored ? (JSON.parse(stored) as ShopUser[]) : [{
+      id: 'demo-user',
+      email: 'administrador@demonstracao.local',
+      role: 'administrador',
+      createdAt: new Date().toISOString(),
+      isCurrent: true,
+    }]
+  }
+
+  const { data, error } = await supabase.functions.invoke('manage-shop-users', {
+    body: { action: 'list' },
+  })
+  if (error || !data?.users) throw new Error('Não foi possível carregar os usuários da loja.')
+  return data.users as ShopUser[]
+}
+
+export async function createShopUser(input: {
+  email: string
+  password: string
+  role: ShopUserRole
+}): Promise<ShopUser> {
+  if (isDemoMode || !supabase) {
+    const users = await listShopUsers()
+    const user: ShopUser = {
+      id: crypto.randomUUID(),
+      email: input.email.trim().toLowerCase(),
+      role: input.role,
+      createdAt: new Date().toISOString(),
+      isCurrent: false,
+    }
+    window.localStorage.setItem(USERS_KEY, JSON.stringify([...users, user]))
+    return user
+  }
+
+  const { data, error } = await supabase.functions.invoke('manage-shop-users', {
+    body: { action: 'create', ...input },
+  })
+  if (error || !data?.user) throw new Error('Não foi possível cadastrar o usuário. Confira o e-mail e tente novamente.')
+  return data.user as ShopUser
 }
 
 export async function listRequests(): Promise<AtpvRequest[]> {

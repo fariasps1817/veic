@@ -12,6 +12,7 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 import { useParams } from 'react-router-dom'
+import { AppFooter } from '../components/AppFooter'
 import { Field, Loading, Notice } from '../components/ui'
 import { findAddressByCep, listCitiesByState, listStates } from '../lib/api'
 import { expirationText } from '../lib/date'
@@ -20,12 +21,17 @@ import {
   buyerSchema,
   formatCurrency,
   maskCep,
-  maskCpfCnpj,
+  maskCnpj,
+  maskCpf,
   maskPhone,
   onlyDigits,
   titleCasePtBr,
+  validateCnpj,
+  validateCpf,
 } from '../lib/validation'
 import type { BuyerData, IbgeCity, IbgeState, PublicRequestView } from '../types'
+
+type DocumentType = 'cpf' | 'cnpj'
 
 const FALLBACK_STATES: IbgeState[] = [
   ['AC', 'Acre'], ['AL', 'Alagoas'], ['AP', 'Amapá'], ['AM', 'Amazonas'], ['BA', 'Bahia'],
@@ -62,6 +68,7 @@ export function PublicForm() {
   const { token = '' } = useParams()
   const [request, setRequest] = useState<PublicRequestView | null>(null)
   const [form, setForm] = useState<BuyerData>(initialBuyer)
+  const [documentType, setDocumentType] = useState<DocumentType>('cpf')
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
@@ -89,6 +96,10 @@ export function PublicForm() {
   }, [])
 
   useEffect(() => {
+    if (request?.shop.nomeFantasia) document.title = `${request.shop.nomeFantasia} — Formulário ATPV`
+  }, [request?.shop.nomeFantasia])
+
+  useEffect(() => {
     if (!form.uf) return
     setCitiesLoading(true)
     void listCitiesByState(form.uf)
@@ -102,6 +113,11 @@ export function PublicForm() {
     setErrors((current) => ({ ...current, [field]: undefined }))
   }
 
+  const selectDocumentType = (type: DocumentType) => {
+    setDocumentType(type)
+    update('cpfCnpj', '')
+  }
+
   const validateStep = (currentStep: number): boolean => {
     const result = buyerSchema.safeParse(form)
     const relevant = new Set(stepFields[currentStep])
@@ -111,6 +127,10 @@ export function PublicForm() {
         const field = issue.path[0] as keyof BuyerData
         if (relevant.has(field) && !nextErrors[field]) nextErrors[field] = issue.message
       })
+    }
+    if (currentStep === 1) {
+      const validDocument = documentType === 'cpf' ? validateCpf(form.cpfCnpj) : validateCnpj(form.cpfCnpj)
+      if (!validDocument) nextErrors.cpfCnpj = `Informe um ${documentType === 'cpf' ? 'CPF' : 'CNPJ'} válido.`
     }
     setErrors((current) => ({ ...current, ...nextErrors }))
     return Object.keys(nextErrors).length === 0
@@ -192,32 +212,38 @@ export function PublicForm() {
 
   const progress = useMemo(() => `${Math.round((step / 3) * 100)}%`, [step])
 
-  if (loading) return <div className="public-center"><Loading label="Abrindo formulário seguro…" /></div>
+  if (loading) return <div className="public-result-page"><div className="public-center"><Loading label="Abrindo formulário seguro…" /></div><AppFooter /></div>
   if (loadError && !request) {
     return (
-      <main className="public-center">
-        <section className="result-card result-card--error">
-          <span><Clock3 aria-hidden="true" /></span>
-          <h1>Link indisponível</h1>
-          <p>{loadError}</p>
-          <small>Entre em contato com a loja para receber um novo link.</small>
-        </section>
-      </main>
+      <div className="public-result-page">
+        <main className="public-center">
+          <section className="result-card result-card--error">
+            <span><Clock3 aria-hidden="true" /></span>
+            <h1>Link indisponível</h1>
+            <p>{loadError}</p>
+            <small>Entre em contato com a loja para receber um novo link.</small>
+          </section>
+        </main>
+        <AppFooter />
+      </div>
     )
   }
   if (!request) return null
   if (sent) {
     return (
-      <main className="public-center">
-        <section className="result-card">
-          <span><CheckCircle2 aria-hidden="true" /></span>
-          <p className="eyebrow">Tudo certo</p>
-          <h1>Dados enviados!</h1>
-          <p>A equipe da {request.shop.nomeFantasia} já pode conferir suas informações.</p>
-          <div className="result-code"><small>Código de acompanhamento</small><strong>{request.codigo}</strong></div>
-          <Notice>Você já pode fechar esta página. Não é necessário enviar os dados novamente.</Notice>
-        </section>
-      </main>
+      <div className="public-result-page">
+        <main className="public-center">
+          <section className="result-card">
+            <span><CheckCircle2 aria-hidden="true" /></span>
+            <p className="eyebrow">Tudo certo</p>
+            <h1>Dados enviados!</h1>
+            <p>A equipe da {request.shop.nomeFantasia} já pode conferir suas informações.</p>
+            <div className="result-code"><small>Código de acompanhamento</small><strong>{request.codigo}</strong></div>
+            <Notice>Você já pode fechar esta página. Não é necessário enviar os dados novamente.</Notice>
+          </section>
+        </main>
+        <AppFooter />
+      </div>
     )
   }
 
@@ -251,17 +277,31 @@ export function PublicForm() {
           <div className="form-step">
             <div className="form-step__title"><span>1</span><div><h2>Seus dados</h2><p>Informe os dados do comprador do veículo.</p></div></div>
             <div className="form-stack">
-              <Field label="CPF ou CNPJ" error={errors.cpfCnpj} required hint="O CNPJ pode conter letras e números.">
+              <div className={`field ${errors.cpfCnpj ? 'field--error' : ''}`}>
+                <span className="field__label" id="document-label">CPF ou CNPJ <span aria-hidden="true">*</span></span>
+                <div className="document-field">
+                  <div className="document-toggle" role="group" aria-label="Tipo de documento">
+                    <button type="button" className={documentType === 'cpf' ? 'active' : ''} onClick={() => selectDocumentType('cpf')} aria-pressed={documentType === 'cpf'}>CPF</button>
+                    <button type="button" className={documentType === 'cnpj' ? 'active' : ''} onClick={() => selectDocumentType('cnpj')} aria-pressed={documentType === 'cnpj'}>CNPJ</button>
+                  </div>
                 <input
+                  aria-labelledby="document-label"
+                  aria-invalid={Boolean(errors.cpfCnpj)}
                   value={form.cpfCnpj}
-                  onChange={(event) => update('cpfCnpj', maskCpfCnpj(event.target.value))}
-                  inputMode={/[A-Za-z]/.test(form.cpfCnpj) ? 'text' : 'numeric'}
+                  onChange={(event) => update('cpfCnpj', documentType === 'cpf' ? maskCpf(event.target.value) : maskCnpj(event.target.value))}
+                  type={documentType === 'cpf' ? 'tel' : 'text'}
+                  inputMode={documentType === 'cpf' ? 'numeric' : 'text'}
                   autoCapitalize="characters"
-                  placeholder="000.000.000-00"
-                  maxLength={18}
+                  autoCorrect="off"
+                  spellCheck={false}
+                  placeholder={documentType === 'cpf' ? '000.000.000-00' : '00.000.000/0000-00'}
+                  required
                   autoFocus
                 />
-              </Field>
+                </div>
+                {errors.cpfCnpj ? <span className="field__error">{errors.cpfCnpj}</span> : null}
+                {!errors.cpfCnpj ? <span className="field__hint">{documentType === 'cnpj' ? 'O novo CNPJ pode conter letras e números nos 12 primeiros caracteres.' : 'Digite somente os 11 números do CPF.'}</span> : null}
+              </div>
               <Field label="Nome completo" error={errors.nomeCompleto} required>
                 <input
                   value={form.nomeCompleto}
@@ -289,9 +329,10 @@ export function PublicForm() {
                   onChange={(event) => update('whatsapp', maskPhone(event.target.value))}
                   type="tel"
                   inputMode="numeric"
+                  autoCorrect="off"
+                  spellCheck={false}
                   autoComplete="tel"
                   placeholder="(85) 99999-9999"
-                  maxLength={15}
                 />
               </Field>
             </div>
@@ -308,10 +349,12 @@ export function PublicForm() {
                     value={form.cep}
                     onChange={(event) => { update('cep', maskCep(event.target.value)); setCepNotice(null) }}
                     onBlur={() => { if (form.cep.replace(/\D/g, '').length === 8 && !cepNotice) void lookupCep() }}
+                    type="tel"
                     inputMode="numeric"
+                    autoCorrect="off"
+                    spellCheck={false}
                     autoComplete="postal-code"
                     placeholder="00000-000"
-                    maxLength={9}
                     autoFocus
                   />
                   <button type="button" onClick={() => void lookupCep()} disabled={cepLoading} aria-label="Consultar CEP">
@@ -363,12 +406,12 @@ export function PublicForm() {
             <div className="form-step__title"><span>3</span><div><h2>Confira antes de enviar</h2><p>Se algo estiver errado, volte e corrija.</p></div></div>
             <div className="review-section">
               <div className="review-block"><h3>Negociação</h3><dl><div><dt>Valor</dt><dd>{formatCurrency(request.valorVendaCentavos)}</dd></div><div><dt>Vendedor</dt><dd>{request.emailVendedor}</dd></div></dl></div>
-              <div className="review-block"><h3>Comprador</h3><dl><div><dt>Nome</dt><dd>{form.nomeCompleto}</dd></div><div><dt>CPF/CNPJ</dt><dd>{form.cpfCnpj}</dd></div><div><dt>E-mail</dt><dd>{form.emailComprador}</dd></div><div><dt>WhatsApp</dt><dd>{form.whatsapp}</dd></div></dl></div>
+              <div className="review-block"><h3>Comprador</h3><dl><div><dt>Nome</dt><dd>{form.nomeCompleto}</dd></div><div><dt>{documentType === 'cpf' ? 'CPF' : 'CNPJ'}</dt><dd>{form.cpfCnpj}</dd></div><div><dt>E-mail</dt><dd>{form.emailComprador}</dd></div><div><dt>WhatsApp</dt><dd>{form.whatsapp}</dd></div></dl></div>
               <div className="review-block"><h3>Endereço</h3><p>{form.logradouro}, {form.numero}{form.complemento ? `, ${form.complemento}` : ''}<br />{form.bairro} — {form.cidade}/{form.uf}<br />CEP {form.cep}</p></div>
             </div>
             <label className={`consent-box ${errors.aceitePrivacidade ? 'consent-box--error' : ''}`}>
               <input type="checkbox" checked={form.aceitePrivacidade} onChange={(event) => update('aceitePrivacidade', event.target.checked)} />
-              <span><ShieldCheck aria-hidden="true" /><span><strong>Confirmo que conferi os dados acima.</strong><small>Estou ciente de que serão usados pela loja para preparar o formulário auxiliar da ATPV.</small></span></span>
+              <span><span className="consent-box__check"><Check aria-hidden="true" /></span><span><strong>Confirmo que conferi os dados acima.</strong><small>Marque esta opção para confirmar que os dados estão corretos e continuar.</small><small>Estou ciente de que serão usados pela loja para preparar o formulário auxiliar da ATPV.</small></span></span>
             </label>
             {errors.aceitePrivacidade ? <span className="standalone-error">{errors.aceitePrivacidade}</span> : null}
             <Notice kind="warning">Esta confirmação não é uma assinatura digital e não emite a ATPV-e oficial.</Notice>
@@ -385,6 +428,7 @@ export function PublicForm() {
       <footer className="public-footer">
         <ShieldCheck aria-hidden="true" /> Seus dados são usados somente para preparar o formulário solicitado.
       </footer>
+      <AppFooter />
     </main>
   )
 }

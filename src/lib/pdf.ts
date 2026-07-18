@@ -297,8 +297,8 @@ export async function generateAtpvPdf(request: AtpvRequest, shop: ShopSettings):
 
   pdf.setTitle(`Formulário auxiliar ATPV - ${request.codigo}`)
   pdf.setSubject('Formulário auxiliar para preenchimento de ATPV')
-  pdf.setCreator('ATPV Fácil')
-  pdf.setProducer('ATPV Fácil')
+  pdf.setCreator(shop.nomeFantasia)
+  pdf.setProducer(shop.nomeFantasia)
   pdf.setCreationDate(new Date())
 
   const bytes = await pdf.save()

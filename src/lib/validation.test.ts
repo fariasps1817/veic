@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import {
   calculateCnpjCheckDigits,
   maskCep,
+  maskCnpj,
+  maskCpf,
   maskCpfCnpj,
   maskPhone,
   titleCasePtBr,
@@ -33,6 +35,8 @@ describe('normalização e máscaras', () => {
   it('aplica máscaras sem exceder os limites', () => {
     expect(maskCpfCnpj('52998224725')).toBe('529.982.247-25')
     expect(maskCpfCnpj('12abc34501de35')).toBe('12.ABC.345/01DE-35')
+    expect(maskCpf('529abc98224725')).toBe('529.982.247-25')
+    expect(maskCnpj('12abc34501deXY35')).toBe('12.ABC.345/01DE-35')
     expect(maskCep('60120100')).toBe('60120-100')
     expect(maskPhone('85988811817')).toBe('(85) 98881-1817')
   })

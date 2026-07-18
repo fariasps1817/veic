@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.cancel-atpv-request]
 verify_jwt = false
+
+[functions.manage-shop-users]
+verify_jwt = false

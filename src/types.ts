@@ -17,6 +17,16 @@ export interface ShopSettings {
   logoDataUrl?: string
 }
 
+export type ShopUserRole = 'administrador' | 'operador'
+
+export interface ShopUser {
+  id: string
+  email: string
+  role: ShopUserRole
+  createdAt: string
+  isCurrent: boolean
+}
+
 export interface BuyerData {
   cpfCnpj: string
   emailComprador: string

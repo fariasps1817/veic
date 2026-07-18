@@ -9,9 +9,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['atpv-icon.svg'],
       manifest: {
-        name: 'ATPV Fácil',
-        short_name: 'ATPV Fácil',
-        description: 'Formulário auxiliar para ATPV',
+        name: 'Thiago Car',
+        short_name: 'Thiago Car',
+        description: 'Atendimento e formulários da Thiago Car',
         lang: 'pt-BR',
         start_url: '/',
         display: 'standalone',
