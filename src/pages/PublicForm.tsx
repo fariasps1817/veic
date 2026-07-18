@@ -33,6 +33,11 @@ import type { BuyerData, IbgeCity, IbgeState, PublicRequestView } from '../types
 
 type DocumentType = 'cpf' | 'cnpj'
 
+const CPF_PATTERN = String.raw`\d{3}\.\d{3}\.\d{3}-\d{2}`
+const PHONE_PATTERN = String.raw`\(\d{2}\) \d{4,5}-\d{4}`
+const CEP_PATTERN = String.raw`\d{5}-\d{3}`
+const ADDRESS_NUMBER_PATTERN = String.raw`\d{1,10}`
+
 const FALLBACK_STATES: IbgeState[] = [
   ['AC', 'Acre'], ['AL', 'Alagoas'], ['AP', 'Amapá'], ['AM', 'Amazonas'], ['BA', 'Bahia'],
   ['CE', 'Ceará'], ['DF', 'Distrito Federal'], ['ES', 'Espírito Santo'], ['GO', 'Goiás'],
@@ -287,7 +292,7 @@ export function PublicForm() {
             <div className="form-step__title"><span>1</span><div><h2>Seus dados</h2><p>Informe os dados do comprador do veículo.</p></div></div>
             <div className="form-stack">
               <div className={`field ${errors.cpfCnpj ? 'field--error' : ''}`}>
-                <span className="field__label" id="document-label">CPF ou CNPJ <span aria-hidden="true">*</span></span>
+                <label className="field__label" id="document-label" htmlFor="buyer-document">CPF ou CNPJ <span aria-hidden="true">*</span></label>
                 <div className="document-field">
                   <div className="document-toggle" role="group" aria-label="Tipo de documento">
                     <button type="button" className={documentType === 'cpf' ? 'active' : ''} onClick={() => selectDocumentType('cpf')} aria-pressed={documentType === 'cpf'}>CPF</button>
@@ -295,14 +300,16 @@ export function PublicForm() {
                   </div>
                 <input
                   key={documentType}
+                  id="buyer-document"
                   name="cpfCnpj"
                   aria-labelledby="document-label"
                   aria-invalid={Boolean(errors.cpfCnpj)}
                   value={form.cpfCnpj}
                   onChange={(event) => update('cpfCnpj', documentType === 'cpf' ? maskCpf(event.target.value) : maskCnpj(event.target.value))}
-                  type="text"
+                  type={documentType === 'cpf' ? 'tel' : 'text'}
                   inputMode={documentType === 'cpf' ? 'numeric' : 'text'}
-                  pattern={documentType === 'cpf' ? '[0-9]*' : undefined}
+                  pattern={documentType === 'cpf' ? CPF_PATTERN : undefined}
+                  maxLength={documentType === 'cpf' ? 14 : 18}
                   enterKeyHint="next"
                   autoComplete="off"
                   autoCapitalize={documentType === 'cpf' ? 'off' : 'characters'}
@@ -341,15 +348,17 @@ export function PublicForm() {
                   name="whatsapp"
                   value={form.whatsapp}
                   onChange={(event) => update('whatsapp', maskPhone(event.target.value))}
-                  type="text"
+                  type="tel"
                   inputMode="numeric"
-                  pattern="[0-9]*"
+                  pattern={PHONE_PATTERN}
+                  maxLength={15}
                   enterKeyHint="next"
                   autoCapitalize="off"
                   autoCorrect="off"
                   spellCheck={false}
                   autoComplete="tel-national"
                   placeholder="(85) 99999-9999"
+                  required
                 />
               </Field>
             </div>
@@ -367,15 +376,17 @@ export function PublicForm() {
                     value={form.cep}
                     onChange={(event) => { update('cep', maskCep(event.target.value)); setCepNotice(null) }}
                     onBlur={() => { if (form.cep.replace(/\D/g, '').length === 8 && !cepNotice) void lookupCep() }}
-                    type="text"
+                    type="tel"
                     inputMode="numeric"
-                    pattern="[0-9]*"
+                    pattern={CEP_PATTERN}
+                    maxLength={9}
                     enterKeyHint="next"
                     autoCapitalize="off"
                     autoCorrect="off"
                     spellCheck={false}
                     autoComplete="off"
                     placeholder="00000-000"
+                    required
                   />
                   <button type="button" onClick={() => void lookupCep()} disabled={cepLoading} aria-label="Consultar CEP">
                     {cepLoading ? <LoaderCircle className="spin" aria-hidden="true" /> : <Search aria-hidden="true" />}
@@ -392,15 +403,16 @@ export function PublicForm() {
                     name="numero"
                     value={form.numero}
                     onChange={(event) => update('numero', onlyDigits(event.target.value).slice(0, 10))}
-                    type="text"
+                    type="tel"
                     inputMode="numeric"
-                    pattern="[0-9]*"
+                    pattern={ADDRESS_NUMBER_PATTERN}
                     enterKeyHint="next"
                     autoCapitalize="off"
                     autoCorrect="off"
                     spellCheck={false}
                     placeholder="Somente números"
                     maxLength={10}
+                    required
                   />
                 </Field>
                 <Field label="Bairro" error={errors.bairro} required>
