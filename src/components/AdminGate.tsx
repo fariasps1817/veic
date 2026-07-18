@@ -1,12 +1,15 @@
 import { useEffect, useState, type FormEvent, type PropsWithChildren } from 'react'
 import { LockKeyhole, LoaderCircle } from 'lucide-react'
 import type { Session } from '@supabase/supabase-js'
+import { getPublicShopBrand } from '../lib/data'
 import { getCurrentSession, isDemoMode, signIn, supabase } from '../lib/supabase'
+import type { ShopBrand } from '../types'
 import { AppFooter } from './AppFooter'
 import { Field, Notice } from './ui'
 
 export function AdminGate({ children }: PropsWithChildren) {
   const [session, setSession] = useState<Session | null>(null)
+  const [brand, setBrand] = useState<ShopBrand | null>(null)
   const [checking, setChecking] = useState(!isDemoMode)
   const [error, setError] = useState('')
   const [sending, setSending] = useState(false)
@@ -17,6 +20,7 @@ export function AdminGate({ children }: PropsWithChildren) {
       setSession(current)
       setChecking(false)
     })
+    void getPublicShopBrand().then(setBrand).catch(() => undefined)
     const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => setSession(nextSession))
     return () => data.subscription.unsubscribe()
   }, [])
@@ -26,6 +30,8 @@ export function AdminGate({ children }: PropsWithChildren) {
     return <div className="center-screen"><LoaderCircle className="spin" /> Verificando acesso…</div>
   }
   if (session) return children
+
+  const shopName = brand?.nomeFantasia || 'Área da loja'
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -45,6 +51,14 @@ export function AdminGate({ children }: PropsWithChildren) {
     <div className="login-shell">
       <main className="login-page">
         <section className="login-card">
+          <div className="login-brand">
+            {brand?.logoDataUrl ? (
+              <img src={brand.logoDataUrl} alt={`Logomarca da ${shopName}`} />
+            ) : (
+              <span aria-hidden="true">{shopName.trim().charAt(0).toUpperCase() || 'L'}</span>
+            )}
+            <strong>{shopName}</strong>
+          </div>
           <span className="login-card__icon"><LockKeyhole aria-hidden="true" /></span>
           <p className="eyebrow">Área da loja</p>
           <h1>Entre para continuar</h1>

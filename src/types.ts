@@ -17,6 +17,8 @@ export interface ShopSettings {
   logoDataUrl?: string
 }
 
+export type ShopBrand = Pick<ShopSettings, 'nomeFantasia' | 'logoDataUrl'>
+
 export type ShopUserRole = 'administrador' | 'operador'
 
 export interface ShopUser {

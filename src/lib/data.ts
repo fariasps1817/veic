@@ -1,4 +1,4 @@
-import type { AtpvRequest, BuyerData, PublicRequestView, RequestStatus, ShopSettings, ShopUser, ShopUserRole } from '../types'
+import type { AtpvRequest, BuyerData, PublicRequestView, RequestStatus, ShopBrand, ShopSettings, ShopUser, ShopUserRole } from '../types'
 import { isDemoMode, supabase } from './supabase'
 
 const REQUESTS_KEY = 'atpv-facil:solicitacoes:v1'
@@ -73,6 +73,18 @@ export async function getShopSettings(): Promise<ShopSettings> {
     endereco: data.endereco ?? '',
     logoDataUrl: data.logo_data_url ?? undefined,
   }
+}
+
+export async function getPublicShopBrand(): Promise<ShopBrand> {
+  if (isDemoMode || !supabase) {
+    const stored = window.localStorage.getItem(SHOP_KEY)
+    const shop = stored ? (JSON.parse(stored) as ShopSettings) : defaultShop
+    return { nomeFantasia: shop.nomeFantasia, logoDataUrl: shop.logoDataUrl }
+  }
+
+  const { data, error } = await supabase.functions.invoke('get-public-shop-brand', { body: {} })
+  if (error || !data?.nomeFantasia) throw new Error('Não foi possível carregar a identificação da loja.')
+  return data as ShopBrand
 }
 
 export async function saveShopSettings(settings: ShopSettings): Promise<void> {

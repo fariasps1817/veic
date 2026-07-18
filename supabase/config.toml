@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.manage-shop-users]
 verify_jwt = false
+
+[functions.get-public-shop-brand]
+verify_jwt = false
