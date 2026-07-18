@@ -1,0 +1,19 @@
+project_id = "atpv-facil"
+
+[functions.create-atpv-request]
+verify_jwt = false
+
+[functions.renew-atpv-request]
+verify_jwt = false
+
+[functions.get-atpv-request]
+verify_jwt = false
+
+[functions.submit-atpv-request]
+verify_jwt = false
+
+[functions.approve-atpv-request]
+verify_jwt = false
+
+[functions.cancel-atpv-request]
+verify_jwt = false

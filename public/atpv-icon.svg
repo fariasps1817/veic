@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="ATPV Fácil">
+  <rect width="512" height="512" rx="116" fill="#14532d"/>
+  <path fill="#fff" d="M145 92h170l52 52v276H145z"/>
+  <path fill="#bbf7d0" d="M315 92v58h58z"/>
+  <path fill="#14532d" d="M186 204h140v24H186zm0 52h140v24H186zm0 52h94v24h-94z"/>
+  <circle cx="334" cy="344" r="65" fill="#22c55e"/>
+  <path fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="24" d="m301 344 23 24 45-54"/>
+</svg>
