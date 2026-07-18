@@ -6,4 +6,5 @@ dist
 .DS_Store
 coverage
 .netlify
+supabase/.temp/
 .vite-*.log
