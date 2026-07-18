@@ -323,13 +323,14 @@ export function PublicForm() {
                   maxLength={160}
                 />
               </Field>
-              <Field label="WhatsApp com DDD|" error={errors.whatsapp} required>
+              <Field label="WhatsApp com DDD-" error={errors.whatsapp} required>
                 <input
                   value={form.whatsapp}
                   onChange={(event) => update('whatsapp', maskPhone(event.target.value))}
                   type="text"
                   inputMode="tel"
                   autoCorrect="off"
+                  pattern="[0-9]*"
                   spellCheck={false}
                   autoComplete="tel"
                   placeholder="(85) 99999-9999"
