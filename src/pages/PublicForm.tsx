@@ -327,11 +327,11 @@ export function PublicForm() {
                 <input
                   value={form.whatsapp}
                   onChange={(event) => update('whatsapp', maskPhone(event.target.value))}
-                  type="text"
-                  inputMode="tel"
+                  type="tel"
+                  inputMode="numeric"
                   autoCorrect="off"
-//                  spellCheck={false}
-//                  autoComplete="tel"
+                  spellCheck={false}
+                  autoComplete="tel"
                   placeholder="(85) 99999-9999"
                 />
               </Field>
