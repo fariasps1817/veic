@@ -1,13 +1,15 @@
 import { createClient, type Session } from '@supabase/supabase-js'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim()
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim()
+const supabasePublicKey =
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim() ||
+  import.meta.env.VITE_SUPABASE_ANON_KEY?.trim()
 
-export const isDemoMode = !supabaseUrl || !supabaseAnonKey
+export const isDemoMode = !supabaseUrl || !supabasePublicKey
 
 export const supabase = isDemoMode
   ? null
-  : createClient(supabaseUrl, supabaseAnonKey, {
+  : createClient(supabaseUrl, supabasePublicKey, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,

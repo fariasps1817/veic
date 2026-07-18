@@ -59,10 +59,10 @@ O teste completo cria uma solicitação, preenche o formulário em viewport de c
 
 ```env
 VITE_SUPABASE_URL=https://SEU-PROJETO.supabase.co
-VITE_SUPABASE_ANON_KEY=SUA_CHAVE_PUBLICA_ANON
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_SUA_CHAVE_PUBLICA
 ```
 
-A chave `service_role` nunca deve ser colocada no frontend, no Netlify ou em arquivos versionados. Ela é disponibilizada automaticamente dentro das Edge Functions do Supabase.
+A chave `sb_secret_...` (ou a antiga `service_role`) nunca deve ser colocada no frontend, no Netlify ou em arquivos versionados. Ela é disponibilizada automaticamente dentro das Edge Functions do Supabase.
 
 ## Estrutura
 

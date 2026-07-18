@@ -1,9 +1,22 @@
 import { createClient, type User } from 'jsr:@supabase/supabase-js@2'
 
+function getSecretKey(): string {
+  const secretKeys = Deno.env.get('SUPABASE_SECRET_KEYS')
+  if (secretKeys) {
+    const defaultKey = (JSON.parse(secretKeys) as Record<string, string>).default
+    if (defaultKey) return defaultKey
+  }
+
+  const legacyKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  if (legacyKey) return legacyKey
+
+  throw new Error('Chave secreta do Supabase não configurada.')
+}
+
 export function adminClient() {
   return createClient(
     Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    getSecretKey(),
     { auth: { persistSession: false, autoRefreshToken: false } },
   )
 }
