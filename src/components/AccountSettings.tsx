@@ -6,12 +6,8 @@ import { changeCurrentPassword } from '../lib/supabase'
 import type { ShopUser, ShopUserRole } from '../types'
 import { Field, Loading, Notice } from './ui'
 
-function isStrongPassword(value: string): boolean {
-  return value.length >= 10
-    && /[a-z]/.test(value)
-    && /[A-Z]/.test(value)
-    && /\d/.test(value)
-    && /[^A-Za-z0-9]/.test(value)
+function isValidPassword(value: string): boolean {
+  return value.length >= 6 && value.trim().length > 0
 }
 
 export function UserManagement() {
@@ -51,8 +47,8 @@ export function UserManagement() {
       setError('Informe um e-mail válido.')
       return
     }
-    if (!isStrongPassword(password)) {
-      setError('A senha temporária deve ter ao menos 10 caracteres, com maiúscula, minúscula, número e símbolo.')
+    if (!isValidPassword(password)) {
+      setError('A senha temporária deve ter no mínimo 6 caracteres.')
       return
     }
 
@@ -119,13 +115,13 @@ export function UserManagement() {
                 required
               />
             </Field>
-            <Field label="Senha temporária" required hint="Mínimo de 10 caracteres, com maiúscula, minúscula, número e símbolo.">
+            <Field label="Senha temporária" required hint="Mínimo de 6 caracteres. Pode conter somente letras, somente números ou uma combinação.">
               <input
                 type="password"
                 autoComplete="new-password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value.slice(0, 72))}
-                minLength={10}
+                minLength={6}
                 maxLength={72}
                 required
               />
@@ -163,8 +159,8 @@ export function PasswordSettings() {
     event.preventDefault()
     setMessage('')
     setError('')
-    if (!isStrongPassword(newPassword)) {
-      setError('A nova senha deve ter ao menos 10 caracteres, com maiúscula, minúscula, número e símbolo.')
+    if (!isValidPassword(newPassword)) {
+      setError('A nova senha deve ter no mínimo 6 caracteres.')
       return
     }
     if (newPassword !== confirmation) {
@@ -201,11 +197,11 @@ export function PasswordSettings() {
         <Field label="Senha atual" required>
           <input type="password" autoComplete="current-password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} required />
         </Field>
-        <Field label="Nova senha" required hint="Mínimo de 10 caracteres, com maiúscula, minúscula, número e símbolo.">
-          <input type="password" autoComplete="new-password" value={newPassword} onChange={(event) => setNewPassword(event.target.value.slice(0, 72))} minLength={10} maxLength={72} required />
+        <Field label="Nova senha" required hint="Mínimo de 6 caracteres. Pode conter somente letras, somente números ou uma combinação.">
+          <input type="password" autoComplete="new-password" value={newPassword} onChange={(event) => setNewPassword(event.target.value.slice(0, 72))} minLength={6} maxLength={72} required />
         </Field>
         <Field label="Confirmar nova senha" required>
-          <input type="password" autoComplete="new-password" value={confirmation} onChange={(event) => setConfirmation(event.target.value.slice(0, 72))} minLength={10} maxLength={72} required />
+          <input type="password" autoComplete="new-password" value={confirmation} onChange={(event) => setConfirmation(event.target.value.slice(0, 72))} minLength={6} maxLength={72} required />
         </Field>
         <div className="form-actions form-actions--end">
           <button className="button button--primary" disabled={saving}>

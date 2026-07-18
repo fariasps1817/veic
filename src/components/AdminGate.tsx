@@ -55,7 +55,7 @@ export function AdminGate({ children }: PropsWithChildren) {
               <input name="email" type="email" autoComplete="username" required />
             </Field>
             <Field label="Senha" required>
-              <input name="password" type="password" autoComplete="current-password" required minLength={8} />
+              <input name="password" type="password" autoComplete="current-password" required minLength={6} />
             </Field>
             <button className="button button--primary button--full" disabled={sending}>
               {sending ? 'Entrando…' : 'Entrar'}

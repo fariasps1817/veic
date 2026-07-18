@@ -4,11 +4,7 @@ import { adminClient, authenticatedUser, userShop } from '../_shared/security.ts
 type UserRole = 'administrador' | 'operador'
 
 function validPassword(value: string): boolean {
-  return value.length >= 10
-    && /[a-z]/.test(value)
-    && /[A-Z]/.test(value)
-    && /\d/.test(value)
-    && /[^A-Za-z0-9]/.test(value)
+  return value.length >= 6 && value.trim().length > 0
 }
 
 Deno.serve(async (request) => {
@@ -75,7 +71,7 @@ Deno.serve(async (request) => {
         throw new Error('Informe um e-mail válido.')
       }
       if (!validPassword(password)) {
-        throw new Error('A senha temporária deve ter ao menos 10 caracteres, com maiúscula, minúscula, número e símbolo.')
+        throw new Error('A senha temporária deve ter no mínimo 6 caracteres.')
       }
 
       const { data: created, error: createError } = await client.auth.admin.createUser({
